@@ -1,11 +1,12 @@
-## {{NAME}}-brunch
-Adds {{DESCRIPTION}} support to
-[brunch](http://brunch.io).
+## keyword-brunch
+make [brunch](http://brunch.io) replace keywords of public files after every time complied
 
 ## Usage
-Add `"{{NAME}}-brunch": "x.y.z"` to `package.json` of your brunch app.
+<del>
+Add `"keyword-brunch": "x.y.z"` to `package.json` of your brunch app.
 
 Pick a plugin version that corresponds to your minor (y) brunch version.
+</del>
 
 If you want to use git version of plugin, add
-`"{{NAME}}-brunch": "git+ssh://git@github.com:brunch/{{NAME}}-brunch.git"`.
+`"keyword-brunch": "git+ssh://git@github.com:bolasblack/keyword-brunch.git"`.
