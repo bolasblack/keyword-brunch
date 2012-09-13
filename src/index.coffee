@@ -4,7 +4,9 @@ module.exports = class KeywordProcesser
   brunchPlugin: yes
 
   constructor: (@config) ->
-    @keywordMap = @config.keywordMap or {}
+    keywordConfig = @config.keyword or {}
+    @keywordMap = keywordConfig.map or {}
+    @filePattern = keywordConfig.filePttern or /\.(js|css|html)$/
     @publicFolder = @config.paths.public
     Object.freeze this
 
@@ -16,8 +18,9 @@ module.exports = class KeywordProcesser
         @processFile filePath
 
   processFile: (file) ->
-    if fs.lstatSync(file).isDirectory()
-      return @processFolder file
+    return @processFolder file if fs.lstatSync(file).isDirectory()
+    return unless @filePattern.test file
+
     fs.readFile file, "utf-8", (err, fileContent) =>
       throw err if err
       resultContent = ""
