@@ -20,15 +20,14 @@ module.exports = class KeywordProcesser
   processFile: (file) ->
     return @processFolder file if fs.lstatSync(file).isDirectory()
     return unless @filePattern.test file
+    fileContent = fs.readFileSync file, "utf-8"
+    return unless fileContent
 
-    fs.readFile file, "utf-8", (err, fileContent) =>
-      throw err if err
-      resultContent = ""
-      for keyword, processer of @keywordMap
-        keywordRE = new RegExp keyword, "g"
-        resultContent = fileContent.replace keywordRE, processer
-      fs.writeFile file, resultContent, "utf-8", (err) ->
-        throw err if err
+    resultContent = ""
+    for keyword, processer of @keywordMap
+      keywordRE = new RegExp keyword, "g"
+      resultContent = fileContent.replace keywordRE, processer
+    fs.writeFileSync file, resultContent, "utf-8"
 
   onCompile: (generatedFiles) ->
     return unless @keywordMap
