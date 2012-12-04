@@ -3,11 +3,27 @@ fs = require "fs"
 module.exports = class KeywordProcesser
   brunchPlugin: yes
 
+  generateDefaultMap: ->
+    map = {}
+    for keyword in ["version", "name"]
+      do (keyword) =>
+        map["{!#{keyword}!}"] = =>
+          unless @packageInfo[keyword]
+            throw new Error "package need a #{keyword}"
+          @packageInfo[keyword]
+    map
+
   constructor: (@config) ->
-    keywordConfig = @config.keyword or {}
-    @keywordMap = keywordConfig.map or {}
-    @filePattern = keywordConfig.filePttern or /\.(js|css|html)$/
-    @publicFolder = @config.paths.public
+    @packageInfo = JSON.parse fs.readFileSync "package.json"
+    @keywordConfig = @config.keyword or {}
+    @filePattern = @keywordConfig.filePattern ? /\.(js|css|html)$/
+
+    @keywordMap = {}
+    defaultMap = @generateDefaultMap()
+    configMap = @keywordConfig.map or {}
+    for own k, v of defaultMap
+      @keywordMap[k] = if configMap[k]? then configMap[k] else v
+
     Object.freeze this
 
   processFolder: (folder) ->
@@ -15,20 +31,22 @@ module.exports = class KeywordProcesser
       throw err if err
       fileList.forEach (file) =>
         filePath = "#{folder}/#{file}"
+        return unless @filePattern.test file
         @processFile filePath
 
   processFile: (file) ->
     return @processFolder file if fs.lstatSync(file).isDirectory()
-    return unless @filePattern.test file
     fileContent = fs.readFileSync file, "utf-8"
     return unless fileContent
 
-    resultContent = ""
+    resultContent = fileContent
     for keyword, processer of @keywordMap
       keywordRE = new RegExp keyword, "g"
-      resultContent = fileContent.replace keywordRE, processer
+      resultContent = resultContent.replace keywordRE, processer
     fs.writeFileSync file, resultContent, "utf-8"
 
   onCompile: (generatedFiles) ->
-    return unless @keywordMap
-    @processFolder @publicFolder
+    return if @filePattern is false
+    @processFolder @config.paths.public
+    if (extraFiles = @keywordConfig.extraFiles)? and extraFiles.length
+      extraFiles.forEach (file) => @processFile file

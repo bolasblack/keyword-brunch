@@ -16,7 +16,17 @@ Usage:
 ```coffeescript
 module.exports = 
   keyword:
+    # file filter
     filePattern: /\.(js|css|html)$/
+
+    # Extra files, add brunch didn't process file here,
+    # will not filter by `filePattern`
+    extraFiles: [
+      "public/humans.txt"
+    ]
+
+    # Now keyword-brunch has two keyword: {!version!}, {!name!}
+    # read information from package.json
     map:
       "{!version!}": processer
 ```
