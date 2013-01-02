@@ -5,24 +5,24 @@ module.exports = class KeywordProcesser
 
   generateDefaultMap: ->
     map = {}
+    packageInfo = JSON.parse fs.readFileSync "package.json", 'utf-8'
     for keyword in ["version", "name"]
-      do (keyword) =>
-        map["{!#{keyword}!}"] = =>
-          unless @packageInfo[keyword]
-            throw new Error "package need a #{keyword}"
-          @packageInfo[keyword]
+      if packageInfo[keyword]?
+        map["{!#{keyword}!}"] = packageInfo[keyword]
+      else
+        console.log "Package.json need a #{keyword}"
+    map["{!date!}"] = "" + Date()
+    map["{!timestamp!}"] = "" + (new Date).getTime()
     map
 
   constructor: (@config) ->
-    @packageInfo = JSON.parse fs.readFileSync "package.json"
+    return unless @config.keyword
     @keywordConfig = @config.keyword or {}
     @filePattern = @keywordConfig.filePattern ? /\.(js|css|html)$/
 
-    @keywordMap = {}
-    defaultMap = @generateDefaultMap()
+    @keywordMap = @generateDefaultMap()
     configMap = @keywordConfig.map or {}
-    for own k, v of defaultMap
-      @keywordMap[k] = if configMap[k]? then configMap[k] else v
+    @keywordMap[k] = v for own k, v of configMap
 
     Object.freeze this
 
@@ -35,15 +35,16 @@ module.exports = class KeywordProcesser
         @processFile filePath
 
   processFile: (file) ->
-    return @processFolder file if fs.lstatSync(file).isDirectory()
-    fileContent = fs.readFileSync file, "utf-8"
-    return unless fileContent
+    fs.exists file, (isExist) =>
+      return console.log(file, "is not exist") if not isExist
+      return @processFolder(file) if fs.lstatSync(file).isDirectory()
+      return unless fileContent = fs.readFileSync file, "utf-8"
 
-    resultContent = fileContent
-    for keyword, processer of @keywordMap
-      keywordRE = new RegExp keyword, "g"
-      resultContent = resultContent.replace keywordRE, processer
-    fs.writeFileSync file, resultContent, "utf-8"
+      resultContent = fileContent
+      for keyword, processer of @keywordMap
+        keywordRE = RegExp keyword, "g"
+        resultContent = resultContent.replace keywordRE, processer
+      fs.writeFileSync file, resultContent, "utf-8"
 
   onCompile: (generatedFiles) ->
     return if @filePattern is false

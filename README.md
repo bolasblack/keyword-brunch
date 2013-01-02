@@ -25,7 +25,8 @@ module.exports =
       "public/humans.txt"
     ]
 
-    # Now keyword-brunch has two keyword: {!version!}, {!name!}
+    # Now keyword-brunch has these keyword:
+    #     {!version!}, {!name!}, {!date!}, {!timestamp!}
     # read information from package.json
     map:
       "{!version!}": processer
@@ -34,5 +35,5 @@ module.exports =
 plugin will do:
 
 ```coffeescript
-fileContent = fileContent.replace (new RegExp "{!version!}"), processer
+fileContent = fileContent.replace RegExp("{!version!}", "g"), processer
 ```
